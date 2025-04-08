@@ -114,13 +114,13 @@ def main():
     resultado_cpu = np.zeros(4, dtype=np.int64)
     resultado_gpu = np.zeros(4, dtype=np.int32)
 
-    start = time.time()
-
+    # ===== Mover el cronómetro aquí, justo después de elegir parámetros =====
     if modo == '1':
         nucleos = int(input(f"Número de núcleos a usar (máximo {cpu_count}): "))
         os.environ["NUMBA_NUM_THREADS"] = str(nucleos)
         os.environ["OMP_NUM_THREADS"] = str(nucleos)
         print(f"Procesando solo en CPU con {nucleos} núcleo(s)...")
+        start = time.time()
         resultado_cpu = contar_bases_cpu(genoma)
 
     elif modo == '2':
@@ -129,6 +129,7 @@ def main():
             print(f"⚠️  El chunk es más grande que el genoma. Se ajustará automáticamente a {len(genoma)}")
             chunk_size = len(genoma)
         print("Procesando solo en GPU con OpenCL...")
+        start = time.time()
         resultado_gpu = contar_bases_gpu_opencl(genoma, chunk_size)
 
     elif modo == '3':
@@ -145,6 +146,8 @@ def main():
         if chunk_size > len(gpu_chunk):
             print(f"⚠️  El chunk es más grande que la parte del genoma asignada a la GPU. Se ajustará a {len(gpu_chunk)}")
             chunk_size = len(gpu_chunk)
+
+        start = time.time()
 
         def tarea_cpu():
             nonlocal resultado_cpu
@@ -163,7 +166,6 @@ def main():
         hilo_cpu.join()
         hilo_gpu.join()
 
-
     else:
         print("Opción no válida.")
         return
@@ -177,6 +179,7 @@ def main():
     print(f"C: {total[2]}")
     print(f"G: {total[3]}")
     print(f"\n⏱️ Tiempo total de ejecución: {elapsed:.2f} segundos")
+
 
 
 if __name__ == "__main__":
